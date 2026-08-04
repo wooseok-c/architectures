@@ -26,7 +26,7 @@ I took the longer route on purpose (see the Swin note below).
   GRU and LSTM gates are written out rather than delegated to `nn.LSTM`.
 - **ViT** is at CIFAR scale (32×32, 10 classes), not the ImageNet configuration.
 
-Longer write-ups (in Korean): [`swin/Swin_정리.md`](swin/Swin_정리.md)
+Longer write-up (in Korean): [`swin/Swin_정리.md`](swin/Swin_정리.md)
 
 ## Running
 
