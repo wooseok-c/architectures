@@ -26,10 +26,6 @@ I took the longer route on purpose (see the Swin note below).
   GRU and LSTM gates are written out rather than delegated to `nn.LSTM`.
 - **ViT** is at CIFAR scale (32×32, 10 classes), not the ImageNet configuration.
 
-Some files keep the `TODO:` scaffolding comments above the finished code — they record what
-each block was supposed to do before it was written, which is most of the value of doing this
-by hand.
-
 Longer write-ups (in Korean): [`swin/Swin_정리.md`](swin/Swin_정리.md),
 [`rnn/GRU_LSTM_정리.md`](rnn/GRU_LSTM_정리.md)
 

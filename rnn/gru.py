@@ -1,7 +1,6 @@
 """
 GRU 셀 한 스텝 구현 연습 (PyTorch nn.Module).
 
-아래 forward 안의 #### TODO 박스 채우기
 검증: torch.nn.GRUCell 에 같은 weight를 복사해서 출력이 일치하는지 확인. (weight sharing)
 실행: python gru.py   ->  "GRU forward PASS" 나오면 성공
 
@@ -45,15 +44,10 @@ class MyGRUCell(nn.Module):
         i_r, i_z, i_n = gi[:, 0:H], gi[:, H:2 * H], gi[:, 2 * H:3 * H]
         h_r, h_z, h_n = gh[:, 0:H], gh[:, H:2 * H], gh[:, 2 * H:3 * H]
 
-        ###############################################################
-        # TODO: GRU 한 스텝을 구현 (torch.sigmoid, torch.tanh 사용) #                           #
-        ###############################################################   
         r = torch.sigmoid(i_r + h_r) # 재료 준비, 후보 n을 만들 때 과거 섞기
         z = torch.sigmoid(i_z + h_z) # 최종 결정, 과거 유지 vs 후보 채택
         n = torch.tanh(i_n + r * h_n) # r을 만들어야 n을 구현, r을 반영한 새로운 초안
         h_new = (1-z) * n + z * h
-        # *END OF YOUR CODE*
-        ###############################################################
         return h_new
 
 # 검증 

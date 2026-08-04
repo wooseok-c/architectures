@@ -26,10 +26,6 @@ class Encoder(nn.Module):
         )
 
     def forward(self, x, mask = None):
-        ###############################################################
-        # TODO: 각 layer 를 순서대로 통과 (출력이 다음 layer 입력).           #
-        #   for layer in self.layers:  x = layer(x, mask)             #
-        ###############################################################
         for layer in self.layers: 
             x = layer(x, mask)  
         return x
@@ -43,11 +39,6 @@ class Decoder(nn.Module):
         )
 
     def forward(self, x, enc_out, self_mask=None, cross_mask=None):
-        ###############################################################
-        # TODO: 각 layer 통과 (enc_out, self_mask 함께 넘김)              #
-        #   for layer in self.layers:                                 #
-        #       x = layer(x, enc_out, self_mask, cross_mask)          #
-        ###############################################################
         for layer in self.layers:
             x = layer(x, enc_out, self_mask, cross_mask)
         return x
@@ -71,15 +62,6 @@ class Transformer(nn.Module):
         tgt: (N, L_tgt)  번역 토큰 id (지금까지)
         return: logits (N, L_tgt, tgt_vocab)  각 위치의 다음 단어 점수
         """
-        ###############################################################
-        # TODO: 전체 파이프라인을 조립하세요.                                #
-        #                                                             #
-        #  ① 인코더 입력: 임베딩 + PE                                     #
-        #                                                             #
-        #  ② 디코더 입력: 임베딩 + PE, causal mask                        #
-        #                                                             #                                                     
-        #  ③ 출력 투영:                                                 #
-        ###############################################################
         enc = self.pos_enc(self.src_emb(src))
         enc_out = self.encoder(enc)
 
@@ -103,7 +85,7 @@ def check_transformer():
                             d_ff=64, num_layers=2, max_len=100)
         logits = model(src, tgt)
     except NotImplementedError as e:
-        print("Transformer  TODO 미완성:", e)
+        print("Transformer  미구현:", e)
         return
 
     shape_ok = logits.shape == (N, L_tgt, tgt_vocab)

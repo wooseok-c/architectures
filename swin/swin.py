@@ -65,16 +65,11 @@ class Mlp(nn.Module):
     def __init__(self, dim, mlp_ratio=4.0):
         super().__init__()
         hidden = int(dim * mlp_ratio)
-        # TODO: fc1, act, fc2 구현
-        #   fc1: Linear(dim -> hidden)
-        #   act: nn.GELU()
-        #   fc2: Linear(hidden -> dim)
         self.fc1 = nn.Linear(dim ,dim * 4)
         self.act = nn.GELU()
         self.fc2 = nn.Linear(dim * 4, dim)
 
     def forward(self, x):
-        # TODO: fc1 -> act -> fc2 순서로 통과시켜 반환
         x = self.fc1(x)
         x = self.act(x)
         x = self.fc2(x)
@@ -105,18 +100,11 @@ class PatchEmbed(nn.Module):
     def __init__(self, in_chans=3, embed_dim=96, patch_size=4):
         super().__init__()
         self.patch_size = patch_size
-        # TODO: proj = Conv2d(in_chans -> embed_dim, kernel_size=patch_size, stride=patch_size)
-        #       norm = LayerNorm(embed_dim)      <- Table 7 의 "96-d, LN"
         self.proj = nn.Conv2d(in_chans, embed_dim, kernel_size = patch_size,  stride = patch_size)
         self.norm = nn.LayerNorm(embed_dim)
 
     def forward(self, x):
         # x: (B, 3, H, W)
-        # TODO:
-        #   1) self.proj(x)                 -> (B, 96, 56, 56)
-        #   2) permute 로 채널을 맨 뒤로      -> (B, 56, 56, 96)
-        #      (힌트: permute(0, 2, 3, 1))
-        #   3) self.norm 통과
         x = self.proj(x)
         x = x.permute(0, 2, 3, 1)
         x = self.norm(x)
@@ -157,9 +145,6 @@ class PatchMerging(nn.Module):
 
     def __init__(self, dim):
         super().__init__()
-        # TODO:
-        #   norm      = LayerNorm() <- concat 직후 차원
-        #   reduction = Linear()
         self.dim = dim
         self.norm = nn.LayerNorm(4 * dim)
         self.reduction = nn.Linear(4 * dim, 2 * dim, bias = False)  
@@ -169,10 +154,6 @@ class PatchMerging(nn.Module):
         B, H, W, C = x.shape
         assert H % 2 == 0 and W % 2 == 0, f"격자가 홀수입니다: {H}x{W}"
 
-        # TODO:
-        #   1) x0, x1, x2, x3 를 슬라이싱      각각 (B, H/2, W/2, C)
-        #   2) torch.cat([...], dim=-1)     -> (B, H/2, W/2, 4C)
-        #   3) norm -> reduction            -> (B, H/2, W/2, 2C)
         x0 = x[:, 0::2, 0::2, ]
         x1 = x[:, 1::2, 0::2, ]
         x2 = x[:, 0::2, 1::2, ]
@@ -240,9 +221,6 @@ class WindowAttention(nn.Module):
         rel[:, :, 0] *= 2 * M - 1                               # 2D -> 1D:  행*(2M-1) + 열
         self.register_buffer("relative_position_index", rel.sum(-1))   # (M*M, M*M)
 
-        # TODO:
-        #   qkv  = Linear(dim -> dim*3, bias=True)    Q, K, V 를 한 번에 만듦
-        #   proj = Linear(dim -> dim)                 head 들을 합친 뒤 출력 사영
         
         self.qkv = nn.Linear(dim, 3 * dim, bias = True)
         self.proj = nn.Linear(dim ,dim)
@@ -374,14 +352,6 @@ class SwinBlock(nn.Module):
 
         H, W, M, s = self.H, self.W, self.M, self.shift_size
 
-        # TODO:
-        #   1) img_mask = torch.zeros((1, H, W, 1))
-        #   2) slices = (slice(0, -M), slice(-M, -s), slice(-s, None))
-        #      이중 for 문으로 9개 지역에 0~8 번호 칠하기
-        #   3) mask_windows = window_partition(img_mask, M).view(-1, M * M)
-        #   4) attn_mask = mask_windows.unsqueeze(1) - mask_windows.unsqueeze(2)
-        #                  -> (조 개수, M*M, M*M).  같은 지역이면 0
-        #   5) attn_mask.masked_fill(attn_mask != 0, -100.0)  으로 채워서 반환
         img_mask = torch.zeros((1, H, W, 1))
         slices = (slice(0, -M), slice(-M, -s), slice(-s, None))
         cnt = 0
@@ -403,14 +373,6 @@ class SwinBlock(nn.Module):
         shortcut = x
         x = self.norm1(x)
 
-        # TODO:
-        #   1) s > 0 이면 torch.roll(x, shifts=(-s, -s), dims=(1, 2))
-        #   2) window_partition(x, M) -> (조개수*B, M*M, C)
-        #   3) self.attn(windows, mask=self.attn_mask)
-        #   4) window_reverse(..., M, H, W)          -> (B, H, W, C)
-        #   5) s > 0 이면 torch.roll(x, shifts=(+s, +s), dims=(1, 2))  되돌리기
-        #   6)  첫 번째 residual
-        #   7)  두 번째 residual
         if s > 0:
             x = torch.roll(x, shifts = (-s, -s), dims = (1,2))
 
@@ -452,13 +414,6 @@ class SwinTransformer(nn.Module):
         self.num_stages = len(depths)
         self.patch_embed = PatchEmbed(in_chans, embed_dim, patch_size=4)
 
-        # TODO:
-        #   stage 마다 시행
-        #   그 stage 의 dim  = embed_dim * 2**i
-        #   그 stage 의 해상도 = img_size // 4 // 2**i
-        #   SwinBlock 을 depths[i] 개.  shift_size 는 짝수 번째 0, 홀수 번째 window_size//2
-        #   마지막 stage 가 아니면 PatchMerging(dim) 을 뒤에 붙임
-        #       nn.ModuleList 로 담기, 파이썬 리스트에 담으면 파라미터로 안 담김.
         
         # 마지막 차원 = embed_dim * 2**(num_stages-1) = 768
         self.stages = nn.ModuleList()
@@ -485,7 +440,6 @@ class SwinTransformer(nn.Module):
 
     def forward_features(self, x):
         """(B, 3, 224, 224) -> stage 별 출력 리스트 (검출용 backbone 으로 쓸 때 필요)"""
-        # TODO: patch_embed 통과 후 stage 를 순서대로 지나며 각 stage 출력을 모아 반환
         
         x = self.patch_embed(x)
         outs = []

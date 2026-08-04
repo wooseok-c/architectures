@@ -40,24 +40,9 @@ class MyBahdanauAttention(nn.Module):
         Ua_H = H @ self.U_a.t()          # (N, Tx, align_dim)   = U_a h_j  (모든 j 한 방에; U_a h_j 미리 계산!)
         # W_a s 를 (N, 1, align_dim) 으로 늘려 모든 j 에 broadcasting 하여 더함
         pre = torch.tanh(Wa_s.unsqueeze(1) + Ua_H)   # (N, Tx, align_dim)
-        ###############################################################
-        # TODO                                                        #
-        #                                                             #
-        #  ① e = 에너지:  pre(N,Tx,n') 를 v_a(n',) 와 내적 → (N, Tx)       #
-        #       힌트: pre @ self.v_a   또는  (pre * self.v_a).sum(-1)   #
-        #                                                             #
-        #  ② alpha: e 에 softmax. 어느 축? 원문 위치(Tx)끼리 확률이니      #
-        #       torch.softmax(e, dim=?)  → (N, Tx)                    #
-        #                                                             #
-        #  ③ c: alpha 로 H 를 가중합 → (N, enc_dim)               #
-        #       힌트: alpha(N,Tx) 를 (N,Tx,1) 로 만들어 H(N,Tx,enc) 와    #
-        #             곱하고 Tx 축(dim=1) 으로 sum                       #
-        ###############################################################
         e = pre @ self.v_a
         alpha = torch.softmax(e, dim = 1)
         c = (alpha.unsqueeze(-1) * H).sum(dim = 1)
-        # *****END OF YOUR CODE*****
-        ###############################################################
 
         return c, alpha
 

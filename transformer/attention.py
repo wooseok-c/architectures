@@ -28,10 +28,7 @@ def scaled_dot_product_attention(Q, K, V, mask=None):
     """
     d_k = Q.size(-1) # 마지막 차원
 
-    ###############################################################
-    # TODO                                                        #
     # 이전에 attention 에서 바뀐 부분을 활용                             #
-    ###############################################################
 
     scores = Q @ K.transpose(-2, -1) / math.sqrt(d_k) # 맨 뒤에 L과 d_k 만 뒤집기
     if mask is not None:
@@ -73,20 +70,6 @@ class MyMultiHeadAttention(nn.Module):
         K = self.k_proj(key).view(N, Lk, H, dh).transpose(1, 2)     # (N, H, Lk, dh)
         V = self.v_proj(value).view(N, Lk, H, dh).transpose(1, 2)
 
-        ###############################################################
-        # TODO: 헤드별 어텐션 → Concat                                   #
-        #                                                             #
-        #  ① 각 헤드에 어텐션 (위 ① 함수 재사용; 마지막 두 축이 L, dh 라        #
-        #       그대로 넘기면 헤드마다 병렬로 계산됨):                         #
-        #       out, _ = scaled_dot_product_attention(Q, K, V, mask)  #
-        #       → out: (N, H, L, dh)                                  #
-        #                                                             #
-        #  ② 헤드 되합치기(concat): (N,H,Lq,dh) → (N,Lq,H,dh) → (N,Lq,D) #
-        #                                                             #
-        #       (transpose 뒤 reshape 하려면 .contiguous() 필요할 수도)    #
-        #                                                             #
-        #  ③ 출력 투영 W^O                                              #
-        ###############################################################
         out, _ = scaled_dot_product_attention(Q, K, V, mask)
         concat = out.transpose(1, 2).reshape(N, Lq, D)
         out = self.out_proj(concat) # 헤드 간 문맥 섞기

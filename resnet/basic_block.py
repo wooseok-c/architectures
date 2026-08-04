@@ -25,15 +25,7 @@ class BasicBlock(nn.Module):
         차원이 바뀌면 (in_ch != out_ch 또는 stride != 1) shortcut에 1x1 conv 필요.
         """
         super().__init__()
-        ############################################################
-        # TODO: F(x) 경로 정의 — conv3x3 -> BN -> relu -> conv3x3 -> BN
-        #   self.conv1 = nn.Conv2d(in_ch, out_ch, kernel_size=3, stride=stride, padding=1, bias=False)
-        #   self.bn1   = nn.BatchNorm2d(out_ch)
-        #   self.conv2 = nn.Conv2d(out_ch, out_ch, kernel_size=3, stride=1, padding=1, bias=False)
-        #   self.bn2   = nn.BatchNorm2d(out_ch)
-        #   self.relu  = nn.ReLU()
         # (첫 conv에만 stride 적용 → 크기는 여기서 줄임. bias=False는 BN이 있어서 관례)
-        ############################################################
         self.residual = nn.Sequential(
             nn.Conv2d(in_ch, out_ch, 3, stride = stride, padding = 1, bias = False),
             nn.BatchNorm2d(out_ch),
@@ -41,16 +33,6 @@ class BasicBlock(nn.Module):
             nn.Conv2d(out_ch, out_ch, 3, padding = 1, bias = False),
             nn.BatchNorm2d(out_ch)
             ) # 여기까지 F(x)
-        ############################################################
-        # TODO: shortcut 정의 — 차원이 같으면 그냥 통과(identity), 다르면 1x1 conv
-        #   if stride != 1 or in_ch != out_ch:
-        #       self.shortcut = nn.Sequential(
-        #           nn.Conv2d(in_ch, out_ch, kernel_size=1, stride=stride, bias=False),
-        #           nn.BatchNorm2d(out_ch),
-        #       )
-        #   else:
-        #       self.shortcut = nn.Identity()   # 그대로 통과 (F(x)+x)
-        ############################################################
         if stride != 1 or in_ch != out_ch:
             self.shortcut = nn.Sequential(
                 nn.Conv2d(in_ch, out_ch, 1, stride = stride, bias=False),
@@ -60,20 +42,9 @@ class BasicBlock(nn.Module):
             self.shortcut = nn.Identity()
         
         self.relu = nn.ReLU()
-        ############################################################
-        #                    END OF YOUR CODE                      #
-        ############################################################
 
     def forward(self, x):
-        ############################################################
-        # TODO:
-        #   out = self.conv1(x); out = self.bn1(out); out = self.relu(out)   # conv-bn-relu
-        #   out = self.conv2(out); out = self.bn2(out)                       # conv-bn (relu 아직 X)
-        #   out = out + self.shortcut(x)   # F(x) + shortcut(x)  ← 핵심!
-        #   out = self.relu(out)           # 더한 뒤 relu
-        #   return out
         # 왜 shortcut(x)? 차원 같으면 x 그대로, 다르면 1x1 conv 거친 x
-        ############################################################
         out = self.residual(x)
         out = out + self.shortcut(x)
         out = self.relu(out)

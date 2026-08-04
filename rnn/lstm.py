@@ -47,17 +47,12 @@ class MyLSTMCell(nn.Module):
         pre_f = gates[:, H:2 * H]
         pre_g = gates[:, 2 * H:3 * H]
         pre_o = gates[:, 3 * H:4 * H]
-        ###############################################################
-        # TODO: LSTM 한 스텝을 구현하세요.                                 #
-        ###############################################################
         i = torch.sigmoid(pre_i)
         f = torch.sigmoid(pre_f)
         g = torch.tanh(pre_g)
         o = torch.sigmoid(pre_o)
         c_new = f * c + i * g # 옛날 것(조절) + 새 것(조절)
         h_new = o * torch.tanh(c_new)
-        # *****END OF YOUR CODE*****
-        ###############################################################
         return h_new, c_new
 
 # 검증 (건드릴 필요 없음)

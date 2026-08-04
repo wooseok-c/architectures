@@ -17,25 +17,11 @@ class RNNCell(nn.Module):
     def __init__(self, input_size, hidden_size):
         super().__init__()
         self.hidden_size = hidden_size
-        ############################################################
-        # TODO: 가중치 정의
-        #   self.W_x = nn.Linear(input_size,  hidden_size)   # x_t 변환 (W_x·x + b 포함)
-        #   self.W_h = nn.Linear(hidden_size, hidden_size, bias=False)  # h_{t-1} 변환
-        # 힌트: nn.Linear가 W와 b를 자동 관리. bias는 W_x쪽에만 두면 됨(중복 방지).
-        ############################################################
         # nn.Linear가 affine 연산
         self.W_x = nn.Linear(input_size, hidden_size)
         self.W_h = nn.Linear(hidden_size, hidden_size, bias = False)
-        ############################################################
-        #                    END OF YOUR CODE                      #
-        ############################################################
     # h_prev : 이전 스텝의 hidden state, h_{t-1}
     def forward(self, x_t, h_prev):
         """한 스텝: (x_t, h_{t-1}) -> h_t"""
-        ############################################################
-        # TODO: h_t = tanh(W_x·x_t + W_h·h_prev)
-        #   h_t = torch.tanh(self.W_x(x_t) + self.W_h(h_prev))
-        #   return h_t
-        ############################################################
         h_t = torch.tanh(self.W_x(x_t) + self.W_h(h_prev))
         return h_t

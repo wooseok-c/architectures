@@ -40,37 +40,19 @@ class PatchEmbed(nn.Module):
         self.num_patches = (img_size // patch_size) ** 2
         self.patch_dim = patch_size * patch_size * in_chans     # P²·C
 
-        ###############################################################
-        # TODO A: 선형 투영 E 를 만드세요.                                 #
-        #   patch_dim 을 받아 embed_dim 을 내는 nn.Linear 하나            #
-        ###############################################################
         self.proj = nn.Linear(self.patch_dim, self.embed_dim) # self.porj = E matrix
-        ###############################################################
 
     def forward(self, x):
         """x: (B, C, H, W) → (B, N, D)"""
         B, C, H, W = x.shape
         P = self.patch_size
 
-        ###############################################################
-        # TODO B: 패치로 자르고 flatten 한 뒤 self.proj 통과                #
-        #                                                             #
-        #   목표: (B, C, H, W) → (B, N, patch_dim) → (B, N, D)         #
-        #                                                             #
-        #   자르는 법 (둘 중 편한 쪽):                                     #
-        #    · x.unfold(2, P, P).unfold(3, P, P) 후 permute/reshape    #
-        #    · x.reshape(B, C, H//P, P, W//P, P) 후 permute/reshape    #
-        #                                                             #
-        #    패치 안의 (P,P,C) 가 한 덩어리로 모여야 합니다                    #
-        #      패치 순서는 좌→우, 위→아래.                                  #
-        ###############################################################
         x = x.reshape(B, C, H//P, P, W//P, P)
         x = x.permute(0, 2, 4, 3, 5, 1) # 세로부터 채우기
         x = x.reshape(B, self.num_patches, self.patch_dim)
         out = self.proj(x)
 
         return out
-        # *****END OF YOUR CODE*****  
 
 # ② ViT Encoder Block : pre-norm + GELU
 class ViTBlock(nn.Module):
@@ -86,16 +68,6 @@ class ViTBlock(nn.Module):
         self.fc2 = nn.Linear(hidden, dim)
 
     def forward(self, x):
-        ###############################################################
-        # TODO C: 식 (2), (3) 을 구현하세요.                              #
-        #                                                             #
-        #   z' = MSA(LN(z)) + z          ← pre-norm 주의!              #
-        #   z  = MLP(LN(z')) + z'                                     #
-        #                                                             #
-        #   · MSA 는 self-attention (self.attn 에 q=k=v 로)            #
-        #   · MLP 는 fc1 → GELU → fc2   (ReLU 아님!)                   #
-        ###############################################################
-        # *****START OF YOUR CODE*****
         h = self.norm1(x)
         x = x + self.attn(h, h, h)
 
@@ -111,19 +83,6 @@ class ViT(nn.Module):
         self.patch_embed = PatchEmbed(img_size, patch_size, in_chans, embed_dim)
         N = self.patch_embed.num_patches
 
-        ###############################################################
-        # TODO D: 학습되는 파라미터 2개를 만드세요.                           #
-        #                                                             #
-        #   self.cls_token : CLS 토큰.  딱 1개.                         #
-        #                    forward 에서 배치만큼 복제할 거라              #
-        #                    (1, 1, embed_dim) 모양으로 만드세요          #
-        #   self.pos_embed : 위치 임베딩. 자리 개수만큼.                    #
-        #                    (1, ?, embed_dim)  — ? 는 몇일까요?         #
-        #                                                             #
-        #   힌트: nn.Parameter(torch.zeros(...))  로 만들고              #
-        #         nn.init.trunc_normal_(p, std=0.02) 로 초기화          #
-        ###############################################################
-        # *****START OF YOUR CODE*****
 
         self.cls_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
         nn.init.trunc_normal_(self.cls_token, std = 0.02)
@@ -132,7 +91,6 @@ class ViT(nn.Module):
         nn.init.trunc_normal_(self.pos_embed, std = 0.02)
         # E+CLS + POS
 
-        ###############################################################
 
         self.blocks = nn.ModuleList(
             [ViTBlock(embed_dim, num_heads, mlp_ratio) for _ in range(depth)]
@@ -144,19 +102,6 @@ class ViT(nn.Module):
         """x: (B, C, H, W) → logits (B, n_classes)"""
         B = x.shape[0]
 
-        ###############################################################
-        # TODO E: 전체 파이프라인                                         #
-        #                                                             #
-        #   ① 패치 임베딩          self.patch_embed(x)                  #
-        #   ② CLS 를 앞에 붙이기    cls_token 을 배치 B 만큼 복제한 뒤        #
-        #                          torch.cat 으로 시퀀스 앞에             #
-        #                          (expand 또는 repeat 사용)            #
-        #   ③ pos_embed 더하기                                         #
-        #   ④ self.blocks 를 순서대로 통과                               #
-        #   ⑤ self.norm 적용 후 CLS 자리(0번)만 꺼내기  ← 식 (4)           #
-        #   ⑥ self.head 로 분류                                        #
-        ###############################################################
-        # *****START OF YOUR CODE*****
         x = self.patch_embed(x)
         
         # 축 복제 B, 나머지는 그대로 -1, expand가 메모리 효율적이여서 사용
@@ -174,7 +119,6 @@ class ViT(nn.Module):
         logits = self.head(x)
 
         return logits
-        # *****END OF YOUR CODE*****
 
 # 검증 
 
@@ -186,7 +130,7 @@ def _check_patch_embed():
     try:
         out = pe(x)
     except NotImplementedError:
-        print("① PatchEmbed   TODO 미완성"); return False
+        print("① PatchEmbed   미구현"); return False
 
     N = (img // P) ** 2
     shape_ok = out.shape == (B, N, D)
@@ -216,7 +160,7 @@ def _check_block():
     try:
         out = blk(x)
     except NotImplementedError:
-        print("② ViTBlock     TODO 미완성"); return False
+        print("② ViTBlock     미구현"); return False
 
     shape_ok = out.shape == x.shape
     # residual 이 있으면 출력이 입력에서 "완전히" 벗어나지 않음
@@ -243,7 +187,7 @@ def _check_vit():
     try:
         logits = model(x)
     except NotImplementedError:
-        print("③ ViT          TODO 미완성"); return False
+        print("③ ViT          미구현"); return False
 
     shape_ok = logits.shape == (B, n_cls)
 

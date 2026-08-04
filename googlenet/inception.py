@@ -40,15 +40,7 @@ class Inception(nn.Module):
         출력 채널 = c1 + c3 + c5 + pool_proj
         """
         super().__init__()
-        ############################################################
-        # TODO: 4개 branch를 정의하세요.
-        #   self.branch1 = 1x1 conv (in_ch -> c1)
-        #   self.branch2 = 1x1 conv (in_ch -> c3_reduce) -> 3x3 conv (c3_reduce -> c3, padding=1)
-        #   self.branch3 = 1x1 conv (in_ch -> c5_reduce) -> 5x5 conv (c5_reduce -> c5, padding=2)
-        #   self.branch4 = 3x3 maxpool(stride=1, padding=1) -> 1x1 conv (in_ch -> pool_proj)
-        # 힌트: conv_block(...) 과 nn.Sequential(...), nn.MaxPool2d(...) 사용
         #   여러 층 묶을 땐 nn.Sequential(conv_block(...), conv_block(...))
-        ############################################################
         self.branch1 = conv_block(in_ch, c1, kernel_size=1)
         self.branch2 = nn.Sequential(conv_block(in_ch, c3_reduce, kernel_size=1),
                                      conv_block(c3_reduce, c3, kernel_size=3, padding = 1)
@@ -59,20 +51,12 @@ class Inception(nn.Module):
         self.branch4 = nn.Sequential(nn.MaxPool2d(kernel_size = 3, stride = 1, padding = 1),
                                      conv_block(in_ch, pool_proj, kernel_size=1))
 
-        ############################################################
-        #                    END OF YOUR CODE                      #
-        ############################################################
 
     def forward(self, x):
-        ############################################################
-        # TODO: 각 branch에 x를 통과시키고 채널 방향으로 concat.
-        #   b1 = self.branch1(x)  ... b4 = self.branch4(x)
-        #   out = torch.cat([b1, b2, b3, b4], dim=1)
         # 왜 dim=1? 텐서가 (N, C, H, W)라 C(채널)가 1번 축.
         b1 = self.branch1(x)
         b2 = self.branch2(x)
         b3 = self.branch3(x)
         b4 = self.branch4(x)
         return torch.cat([b1, b2, b3, b4], dim = 1)
-        ############################################################
         pass

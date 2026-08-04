@@ -21,18 +21,9 @@ class Seq2Seq(nn.Module):
         super().__init__()
         self.hidden_size = hidden_size
         self.vocab_size = vocab_size
-        ############################################################
-        # TODO:
-        #   self.encoder = RNN(input_size, hidden_size)          # 입력 시퀀스 인코딩
-        #   self.decoder_cell = RNNCell(hidden_size, hidden_size) # 디코더는 셀 단위로 한 스텝씩
-        #   self.out = nn.Linear(hidden_size, vocab_size)         # hidden -> 어휘 점수(softmax 전)
-        ############################################################
         self.encoder = RNN(input_size, hidden_size)
         self.decoder_cell = RNNCell(hidden_size, hidden_size)
         self.out = nn.Linear(hidden_size, vocab_size)
-        ############################################################
-        #                    END OF YOUR CODE                      #
-        ############################################################
 
     def forward(self, src, max_len):
         """
@@ -41,14 +32,7 @@ class Seq2Seq(nn.Module):
         반환: logits (batch, max_len, vocab_size)   각 스텝의 어휘 점수
         """
         batch = src.shape[0]
-        ############################################################
-        # TODO: 인코더 -> context
-        #   _, context = self.encoder(src)  # context: (batch, hidden_size) = 입력 요약
-        ############################################################
         _, context = self.encoder(src)          
-        ############################################################
-        # TODO: 디코더 루프 (한 스텝씩 생성)
-        ############################################################
         h = context
         dec_in = torch.zeros(batch, self.hidden_size)
         logits = []

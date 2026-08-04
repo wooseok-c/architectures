@@ -24,12 +24,6 @@ class PositionalEncoding(nn.Module):
                              * (-math.log(10000.0) / d_model))          # (d_model/2,)
         pe = torch.zeros(max_len, d_model)                              # (max_len, d_model)
 
-        ###############################################################
-        # TODO: pe 를 sin/cos 로 채우세요.                              #
-        #   짝수 차원: pe[:, 0::2] = sin(position * div_term)          #
-        #   홀수 차원: pe[:, 1::2] = cos(position * div_term)          #
-        #   (position * div_term 이 (max_len, d_model/2) 로 broadcast)#
-        ##############################################################
         pe[:, 0::2] = torch.sin(position * div_term)
         pe[:, 1::2] = torch.cos(position * div_term)
 
@@ -47,10 +41,6 @@ class PositionwiseFeedForward(nn.Module):
         self.lin2 = nn.Linear(d_ff, d_model)   # 축소 (2048 → 512)
 
     def forward(self, x):
-        ###############################################################
-        # TODO: 2층 MLP.  lin1 → ReLU → lin2                          #
-        #   힌트: self.lin2(F.relu(self.lin1(x)))                      #
-        ###############################################################
         return self.lin2(F.relu(self.lin1(x)))
 
 # ③ Encoder Layer  =  self-attn + FFN  (각각 residual + LayerNorm)
@@ -64,15 +54,6 @@ class EncoderLayer(nn.Module):
 
     def forward(self, x, mask=None):
         """x: (N, L, d_model) → (N, L, d_model)"""
-        ###############################################################
-        # TODO: 서브층 2개, 각각 residual + norm.                       #
-        #   패턴: out = LayerNorm(x + Sublayer(x))                     #
-        #                                                             #
-        #  ① self-attention (self 라 q=k=v=x):                        #
-        #       x = self.norm1(x + self.self_attn(x, x, x, mask))     #
-        #  ② FFN:                                                     #
-        #       x = self.norm2(x + self.ffn(x))                       #
-        ###############################################################
         x = self.norm1(x + self.self_attn(x, x, x, mask))
         x = self.norm2(x + self.ffn(x))
 
@@ -96,16 +77,6 @@ class DecoderLayer(nn.Module):
         self_mask:  causal mask (미래 가림)
         return: (N, L_tgt, d_model)
         """
-        ###############################################################
-        # TODO: 서브층 3개, 각각 residual + norm.                       #
-        #                                                             #
-        #  ① masked self-attn (q=k=v=x, self_mask):                   #
-        #       x = self.norm1(x + self.self_attn(x, x, x, self_mask))#
-        #  ② cross-attn (q=x, k=v=enc_out, cross_mask):               #
-        #       x = self.norm2(x + self.cross_attn(x, enc_out, enc_out, cross_mask))
-        #  ③ FFN:                                                     #
-        #       x = self.norm3(x + self.ffn(x))                       #
-        ###############################################################
         x = self.norm1(x + self.self_attn(x, x, x, self_mask))
         x = self.norm2(x + self.cross_attn(x, enc_out, enc_out, cross_mask))
         x = self.norm3(x + self.ffn(x))
@@ -127,7 +98,7 @@ def _check():
         shape_ok = added.shape == x.shape
         print(f"① PositionalEncoding  {'PASS' if (ok_sin and ok_cos and shape_ok) else 'FAIL'}")
     except NotImplementedError:
-        print("① PositionalEncoding  TODO 미완성")
+        print("① PositionalEncoding  미구현")
 
     # ② FFN
     try:
@@ -136,7 +107,7 @@ def _check():
         out = ffn(x)
         print(f"② FeedForward         {'PASS' if out.shape == x.shape else 'FAIL'}")
     except NotImplementedError:
-        print("② FeedForward         TODO 미완성")
+        print("② FeedForward         미구현")
 
     # ③ EncoderLayer
     try:
@@ -145,7 +116,7 @@ def _check():
         out = enc(x)
         print(f"③ EncoderLayer        {'PASS' if out.shape == x.shape else 'FAIL'}")
     except NotImplementedError:
-        print("③ EncoderLayer        TODO 미완성")
+        print("③ EncoderLayer        미구현")
 
     # ④ DecoderLayer
     try:
@@ -156,7 +127,7 @@ def _check():
         out = dec(x, enc_out, self_mask=causal)
         print(f"④ DecoderLayer        {'PASS' if out.shape == x.shape else 'FAIL'}")
     except NotImplementedError:
-        print("④ DecoderLayer        TODO 미완성")
+        print("④ DecoderLayer        미구현")
 
 
 if __name__ == "__main__":
