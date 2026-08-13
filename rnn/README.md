@@ -1,27 +1,33 @@
-# RNN / Seq2Seq 구현 연습 (방식 B: 구조·shape 위주)
+# RNN, GRU/LSTM, Seq2Seq, Attention
 
-## 목표
-RNN이 시퀀스를 어떻게 처리하는지 손으로 느끼기.
-셀 → 시퀀스 → 인코더-디코더 순으로 쌓아 올린다. (학습까지는 X, forward 구조만)
+Forward structure only, no training. The point is to see how a sequence is carried through the
+network and where that breaks down.
 
-## 핵심 식
-    RNN 셀:  h_t = tanh(W_x·x_t + W_h·h_{t-1} + b)
-    같은 W를 모든 스텝에 재사용 (파라미터 공유)
+The cell is two affine maps and a `tanh`, with the same weights reused at every step:
 
-## 파일 (순서대로 채우기)
-1. `rnn_cell.py`   — RNN 셀 한 스텝 (h_t = tanh(...))  ★ 여기부터
-2. `rnn_layer.py`  — 시퀀스 전체 (for 루프로 셀 반복)
-3. `seq2seq.py`    — 인코더-디코더 (context → 디코더 생성)
-4. `test_rnn.py`   — 세 단계 shape 검증
+```
+h_t = tanh(W_x·x_t + W_h·h_{t-1} + b)
+```
 
-## 진행
-1~3을 채우고:
-    python test_rnn.py
-  → 세 단계 다 통과하면 성공
+Built bottom up, in this order:
 
-## 개념 연결
-- RNN 셀 = affine 2개(현재 입력 + 이전 기억) + tanh
-- 시퀀스 = 셀을 시간축으로 반복 (h를 계속 넘김 = 기억 사슬)
-- 인코더 마지막 h = context (입력 요약 벡터 1개) ← 병목
-- 디코더 = context에서 한 단어씩 생성 (직전 출력 되먹임 = autoregressive)
-- 다음(내일): 이 병목을 Attention이 개선 (context 하나 → 모든 h 직접 보기)
+| File | |
+|---|---|
+| `rnn_cell.py` | one step |
+| `rnn_layer.py` | the sequence, looping the cell and passing `h` along |
+| `gru.py`, `lstm.py` | gates written out individually |
+| `seq2seq.py` | encoder and decoder |
+| `attention.py` | additive attention over the encoder states |
+| `test_rnn.py` | shape checks for cell, layer and seq2seq |
+
+The order matters. The encoder's last `h` is a single vector standing in for the whole input,
+which is the bottleneck; the decoder generates from it one token at a time, feeding its own
+output back. Attention exists to remove that bottleneck by letting the decoder read every
+encoder state directly, so it is easier to see the point of after writing the version that
+lacks it.
+
+## Running
+
+```bash
+python test_rnn.py
+```
