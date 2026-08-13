@@ -1,32 +1,31 @@
 # architectures
 
-Deep learning architectures rebuilt in PyTorch from the original papers — module by module,
-each with a test that checks shapes end to end.
+Published deep learning architectures, re-implemented in PyTorch from the papers, module by
+module. Each directory has a test that checks shapes end to end.
 
-The point is not to have a fast implementation; it is to have understood the paper well enough
-to write the layer. Where a reference implementation takes a shortcut that hides the idea,
-I took the longer route on purpose (see the Swin note below).
+These are not models I designed. I wrote them to study them, without a reference implementation
+open, so the code is written for reading rather than for speed.
 
-| Directory | Architecture | Paper | Check |
-|---|---|---|---|
-| [`swin/`](swin) | Swin Transformer (Swin-T) | Liu et al., ICCV 2021 | **28.3M params** vs 29M in paper Table 1 · 6/6 components |
-| [`transformer/`](transformer) | Transformer, ViT | Vaswani et al. 2017 · Dosovitskiy et al. 2021 | forward passes verified |
-| [`rnn/`](rnn) | RNN → GRU/LSTM → Seq2Seq → Attention | Hochreiter & Schmidhuber · Cho · Sutskever · Bahdanau | cell / layer / seq2seq shapes |
-| [`resnet/`](resnet) | ResNet BasicBlock | He et al., CVPR 2016 | 3 shortcut cases |
-| [`googlenet/`](googlenet) | Inception module | Szegedy et al., CVPR 2015 | `(2, 256, 28, 28)` |
+| Directory | Architecture | Paper |
+|---|---|---|
+| [`swin/`](swin) | Swin Transformer (Swin-T) | Liu et al., ICCV 2021 |
+| [`transformer/`](transformer) | Transformer, ViT | Vaswani et al. 2017 · Dosovitskiy et al. 2021 |
+| [`rnn/`](rnn) | RNN, GRU/LSTM, Seq2Seq, Attention | Hochreiter & Schmidhuber · Cho · Sutskever · Bahdanau |
+| [`resnet/`](resnet) | ResNet BasicBlock | He et al., CVPR 2016 |
+| [`googlenet/`](googlenet) | Inception module | Szegedy et al., CVPR 2015 |
 
 ## Notes
 
-- **Swin** — tensors are kept in grid form `(B, H, W, C)` rather than the official flattened
-  `(B, L, C)`. It costs a few reshapes, but the shifted window is something you can follow by
-  hand instead of taking on faith. Includes the relative position bias table and the attention
-  mask that makes the cyclic shift correct.
-- **Recurrent models** — built in the order RNN cell → sequence layer → seq2seq, so the
-  context-vector bottleneck shows up on its own before attention is introduced to fix it.
-  GRU and LSTM gates are written out rather than delegated to `nn.LSTM`.
+- **Swin** is the only full model here rather than a single block. It comes to 28.3M parameters;
+  the paper's Table 1 reports 29M. Tensors stay in grid form `(B, H, W, C)` instead of the
+  official flattened `(B, L, C)`, which costs a few reshapes but makes the window shift easier
+  to follow. Includes the relative position bias table and the shift mask.
+- **Recurrent models** are built in the order RNN cell, sequence layer, seq2seq, so the
+  context-vector bottleneck appears before attention is added. GRU and LSTM gates are written
+  out rather than delegated to `nn.LSTM`.
 - **ViT** is at CIFAR scale (32×32, 10 classes), not the ImageNet configuration.
 
-Longer write-up (in Korean): [`swin/Swin_정리.md`](swin/Swin_정리.md)
+Longer write-up, in Korean: [`swin/Swin_정리.md`](swin/Swin_정리.md)
 
 ## Running
 
