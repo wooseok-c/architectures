@@ -2,8 +2,7 @@
 
 Szegedy et al., *Going Deeper with Convolutions*, CVPR 2015.
 
-The Inception module is the part worth writing by hand. The full 22-layer network is this
-module stacked nine times, so implementing one covers the idea.
+The full 22-layer network is this module stacked nine times, so one module covers the idea.
 
 Two things it introduces:
 

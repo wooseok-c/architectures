@@ -3,8 +3,8 @@
 Published deep learning architectures, re-implemented in PyTorch from the papers, module by
 module. Each directory has a test that checks shapes end to end.
 
-These are not models I designed. I wrote them to study them, without a reference implementation
-open, so the code is written for reading rather than for speed.
+None of these are my own designs. I wrote them to learn how they work, without a reference
+implementation open, so the code is written for reading rather than for speed.
 
 | Directory | Architecture | Paper |
 |---|---|---|
