@@ -3,3 +3,4 @@ __pycache__/
 *.pyc
 .venv/
 GRU_LSTM_정리.md
+Swin_정리.md

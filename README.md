@@ -25,8 +25,6 @@ implementation open, so the code is written for reading rather than for speed.
   out rather than delegated to `nn.LSTM`.
 - **ViT** is at CIFAR scale (32×32, 10 classes), not the ImageNet configuration.
 
-Longer write-up, in Korean: [`swin/Swin_정리.md`](swin/Swin_정리.md)
-
 ## Running
 
 Requires `torch`.
