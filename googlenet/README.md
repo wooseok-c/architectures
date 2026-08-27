@@ -18,7 +18,6 @@ Two things it introduces:
 |---|---|
 | `inception.py` | the module |
 | `test_inception.py` | shape check |
-| `small_googlenet.py` | a few Inception blocks stacked for CIFAR |
 
 ## Running
 
