@@ -1,5 +1,5 @@
 """
-Inception module 검증 — shape이 맞게 흐르는지 확인.
+Inception module 검증, shape이 맞게 흐르는지 확인.
 실행:  python test_inception.py
 성공:  torch.Size([2, 256, 28, 28]) 출력
 
@@ -18,4 +18,4 @@ print(out.shape)                  # 기대: torch.Size([2, 256, 28, 28])
 
 assert out.shape == (2, 256, 28, 28), \
     f"채널/크기 안 맞음: {out.shape} (기대 (2,256,28,28))"
-print("OK — Inception module 통과!")
+print("OK, Inception module 통과!")

@@ -1,5 +1,5 @@
 """
-Seq2Seq (인코더-디코더) — RNN으로 시퀀스를 다른 시퀀스로 (예: 번역).
+Seq2Seq (인코더-디코더), RNN으로 시퀀스를 다른 시퀀스로 (예: 번역).
 
 구조:
   인코더 RNN: 입력 시퀀스 → 마지막 h = context (입력 요약 벡터 1개)
@@ -9,7 +9,7 @@ Seq2Seq (인코더-디코더) — RNN으로 시퀀스를 다른 시퀀스로 (�
 
 학습까지는 안 하고, forward 구조 + shape 흐름만 확인.
         디코더 입력은 간단히 "직전 스텝 hidden"을 넘기는 식으로 단순화.
-※ 병목: 인코더 정보가 context 벡터 "하나"에 압축됨 → 나중에 attention이 개선.
+병목: 인코더 정보가 context 벡터 "하나"에 압축됨 → 나중에 attention이 개선.
 """
 import torch
 import torch.nn as nn

@@ -2,16 +2,16 @@
 Transformer attention 구현
 
 두 개 채우기:
-  ① scaled_dot_product_attention  — (식 + 스케일/마스크)
-  ② MyMultiHeadAttention          — 헤드로 쪼개 각자 어텐션 → Concat.
+  1) scaled_dot_product_attention    식 + 스케일/마스크
+  2) MyMultiHeadAttention            헤드로 쪼개 각자 어텐션 → Concat.
 
 검증: python attention.py
-  - ① torch.nn.functional.scaled_dot_product_attention 과 비교 (마스크 없음/causal)
-  - ② torch.nn.MultiheadAttention 에 같은 weight 복사해서 비교
+  - 1) torch.nn.functional.scaled_dot_product_attention 과 비교 (마스크 없음/causal)
+  - 2) torch.nn.MultiheadAttention 에 같은 weight 복사해서 비교
 
 수식:
-  ① Attention(Q,K,V) = softmax(QK^T / sqrt(d_k) + mask) V
-  ② MultiHead = Concat(head_1..head_h) W^O,  head_i = Attention(Q_i, K_i, V_i)
+  1) Attention(Q,K,V) = softmax(QK^T / sqrt(d_k) + mask) V
+  2) MultiHead = Concat(head_1..head_h) W^O,  head_i = Attention(Q_i, K_i, V_i)
 """
 
 import math
@@ -19,7 +19,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-# ① Scaled Dot-Product Attention
+# 1) Scaled Dot-Product Attention
 def scaled_dot_product_attention(Q, K, V, mask=None):
     """
     Q, K, V: (..., L, d_k)   (앞쪽 차원은 batch나 head 등 뭐든; 마지막 두 개가 L, d_k)
@@ -38,7 +38,7 @@ def scaled_dot_product_attention(Q, K, V, mask=None):
 
     return out, alpha
 
-# ② Multi-Head Attention
+# 2) Multi-Head Attention
 class MyMultiHeadAttention(nn.Module):
     def __init__(self, d_model, num_heads):
         super().__init__()
@@ -96,7 +96,7 @@ def check_sdpa():
     ref_c = F.scaled_dot_product_attention(Q, K, V, is_causal=True)
     ok2 = torch.allclose(out_c, ref_c, atol=1e-8)
 
-    print(f"① SDPA        {'PASS' if (ok1 and sum_ok and ok2) else 'FAIL'}"
+    print(f"1) SDPA        {'PASS' if (ok1 and sum_ok and ok2) else 'FAIL'}"
           f"  (no-mask {'ok' if ok1 else 'X'}, α합=1 {'ok' if sum_ok else 'X'}, causal {'ok' if ok2 else 'X'})")
 
 
@@ -122,7 +122,7 @@ def check_mha():
     out_ref, _ = ref(x, x, x)      # self-attention: q=k=v=x
     out_mine = mine(x, x, x)
     ok = torch.allclose(out_ref, out_mine, atol=1e-8)
-    print(f"② MultiHead   {'PASS' if ok else 'FAIL'}")
+    print(f"2) MultiHead   {'PASS' if ok else 'FAIL'}")
     if not ok and out_mine is not None:
         print("   max diff:", (out_ref - out_mine).abs().max().item())
 

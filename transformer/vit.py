@@ -4,13 +4,13 @@ Vision Transformer (ViT) 구현 연습.
 
 전체 흐름 (식 1~4):
     이미지 (B,C,H,W)
-      ① 패치로 자르고 flatten     → (B, N, P²·C)       [파라미터 0]
-      ② E 로 투영                → (B, N, D)          ★
-      ③ CLS 를 앞에 concat        → (B, N+1, D)        ★
-      ④ E_pos 를 add             → (B, N+1, D) = z₀   ★
-      ⑤ 인코더 × L층              → (B, N+1, D) = z_L  ★
-      ⑥ CLS(0번)만 꺼내고 LN      → (B, D) = y
-      ⑦ 분류 헤드                → (B, n_classes)     ★
+      1) 패치로 자르고 flatten     → (B, N, P²·C)       [파라미터 0]
+      2) E 로 투영                → (B, N, D)          [파라미터 있음]
+      3) CLS 를 앞에 concat        → (B, N+1, D)        [파라미터 있음]
+      4) E_pos 를 add             → (B, N+1, D) = z₀   [파라미터 있음]
+      5) 인코더 × L층              → (B, N+1, D) = z_L  [파라미터 있음]
+      6) CLS(0번)만 꺼내고 LN      → (B, D) = y
+      7) 분류 헤드                → (B, n_classes)     [파라미터 있음]
 
     z₀ = [x_class; x_p¹E; ...; x_p^N E] + E_pos          (1)
     z'_ℓ = MSA(LN(z_{ℓ-1})) + z_{ℓ-1}                    (2)   ← pre-norm!
@@ -26,7 +26,7 @@ import torch.nn.functional as F
 
 from attention import MyMultiHeadAttention
 
-# ① Patch Embedding : 이미지 → 패치 토큰
+# 1) Patch Embedding : 이미지 → 패치 토큰
 class PatchEmbed(nn.Module):
     """(B, C, H, W) → (B, N, D),  N = (H/P)·(W/P)"""
 
@@ -54,7 +54,7 @@ class PatchEmbed(nn.Module):
 
         return out
 
-# ② ViT Encoder Block : pre-norm + GELU
+# 2) ViT Encoder Block : pre-norm + GELU
 class ViTBlock(nn.Module):
     """식 (2), (3).  x → x  (크기 유지)"""
 
@@ -75,7 +75,7 @@ class ViTBlock(nn.Module):
         x = x + self.fc2(F.gelu(self.fc1(h)))
         return x
 
-# ③ Vision Transformer 전체
+# 3) Vision Transformer 전체
 class ViT(nn.Module):
     def __init__(self, img_size=32, patch_size=8, in_chans=3, n_classes=10,
                  embed_dim=64, depth=4, num_heads=4, mlp_ratio=4.0):
@@ -130,7 +130,7 @@ def _check_patch_embed():
     try:
         out = pe(x)
     except NotImplementedError:
-        print("① PatchEmbed   미구현"); return False
+        print("1) PatchEmbed   미구현"); return False
 
     N = (img // P) ** 2
     shape_ok = out.shape == (B, N, D)
@@ -146,7 +146,7 @@ def _check_patch_embed():
     content_ok = ok_a or ok_b
 
     ok = shape_ok and content_ok
-    print(f"① PatchEmbed   {'PASS' if ok else 'FAIL'}"
+    print(f"1) PatchEmbed   {'PASS' if ok else 'FAIL'}"
           f"  (shape {tuple(out.shape)} {'ok' if shape_ok else f'≠ {(B,N,D)}'}"
           f", 첫 패치 내용 {'ok' if content_ok else 'X (자르는 순서 확인)'})")
     return ok
@@ -160,7 +160,7 @@ def _check_block():
     try:
         out = blk(x)
     except NotImplementedError:
-        print("② ViTBlock     미구현"); return False
+        print("2) ViTBlock     미구현"); return False
 
     shape_ok = out.shape == x.shape
     # residual 이 있으면 출력이 입력에서 "완전히" 벗어나지 않음
@@ -171,7 +171,7 @@ def _check_block():
     prenorm_ok = (big - out).abs().mean() > 1.0
 
     ok = shape_ok and resid_ok and prenorm_ok
-    print(f"② ViTBlock     {'PASS' if ok else 'FAIL'}"
+    print(f"2) ViTBlock     {'PASS' if ok else 'FAIL'}"
           f"  (shape {'ok' if shape_ok else 'X'}"
           f", residual {'ok' if resid_ok else 'X'}"
           f", pre-norm {'ok' if prenorm_ok else 'X (post-norm 쓴 듯)'})")
@@ -187,7 +187,7 @@ def _check_vit():
     try:
         logits = model(x)
     except NotImplementedError:
-        print("③ ViT          미구현"); return False
+        print("3) ViT          미구현"); return False
 
     shape_ok = logits.shape == (B, n_cls)
 
@@ -202,7 +202,7 @@ def _check_vit():
     differs = not torch.allclose(logits, out2, atol=1e-4)
 
     ok = shape_ok and cls_used and pos_used and differs
-    print(f"③ ViT          {'PASS' if ok else 'FAIL'}"
+    print(f"3) ViT          {'PASS' if ok else 'FAIL'}"
           f"  (출력 {tuple(logits.shape)} {'ok' if shape_ok else f'≠ {(B,n_cls)}'}"
           f", CLS 사용 {'ok' if cls_used else 'X'}"
           f", pos_embed 사용 {'ok' if pos_used else 'X'}"
@@ -218,4 +218,4 @@ if __name__ == "__main__":
     b = _check_block()
     c = _check_vit()
     if a and b and c:
-        print("\n🎉 ViT 완성!")
+        print("\nViT 완성!")

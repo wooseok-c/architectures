@@ -1,5 +1,5 @@
 """
-ResNet BasicBlock — ResNet의 핵심 부품.
+ResNet BasicBlock, ResNet의 핵심 부품.
 논문: "Deep Residual Learning for Image Recognition" (He et al., 2015), Section 3.1~3.2, Figure 2.
 
 핵심:  y = F(x) + x       (출력 = 잔차 + 입력)

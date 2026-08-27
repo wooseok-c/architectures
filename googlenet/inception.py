@@ -1,5 +1,5 @@
 """
-Inception module — GoogLeNet의 핵심 부품.
+Inception module, GoogLeNet의 핵심 부품.
 논문: "Going Deeper with Convolutions" (Szegedy et al., 2014), Section 4, Figure 2(b).
 
 Inception module = 4개의 병렬 branch를 "채널 방향"으로 concat:

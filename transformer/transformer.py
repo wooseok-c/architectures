@@ -1,8 +1,8 @@
 """
 Transformer 전체 조립.
-  ① Encoder      — EncoderLayer 를 N번 쌓기
-  ② Decoder      — DecoderLayer 를 N번 쌓기
-  ③ Transformer  — 임베딩 + PE → 인코더 → 디코더 → 출력 투영(어휘 확률)
+  1) Encoder        EncoderLayer 를 N번 쌓기
+  2) Decoder        DecoderLayer 를 N번 쌓기
+  3) Transformer    임베딩 + PE → 인코더 → 디코더 → 출력 투영(어휘 확률)
 
 검증: python transformer.py  → 출력 shape (N, L_tgt, tgt_vocab) 확인 + causal mask
 """
@@ -17,7 +17,7 @@ def causal_mask(L, dtype=torch.float32):
     """미래를 가리는 삼각 마스크: 위치 i 는 j<=i 만 봄. (L, L), 가릴 곳 -inf."""
     return torch.triu(torch.full((L, L), float("-inf"), dtype=dtype), diagonal=1)
 
-# ① Encoder 스택
+# 1) Encoder 스택
 class Encoder(nn.Module):
     def __init__(self, num_layers, d_model, num_heads, d_ff):
         super().__init__()
@@ -30,7 +30,7 @@ class Encoder(nn.Module):
             x = layer(x, mask)  
         return x
 
-# ② Decoder 스택
+# 2) Decoder 스택
 class Decoder(nn.Module):
     def __init__(self, num_layers, d_model, num_heads, d_ff):
         super().__init__()
@@ -43,7 +43,7 @@ class Decoder(nn.Module):
             x = layer(x, enc_out, self_mask, cross_mask)
         return x
 
-# ③ Transformer 전체
+# 3) Transformer 전체
 class Transformer(nn.Module):
     def __init__(self, src_vocab, tgt_vocab, d_model=32, num_heads=4,
                  d_ff=64, num_layers=2, max_len=100):

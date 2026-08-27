@@ -45,11 +45,11 @@ if __name__ == "__main__":
     back = window_reverse(w, M=3, H=6, W=6)
     print(f"\nreverse 후: {tuple(back.shape)}")
     assert torch.equal(orig, back), "왕복이 원본과 다릅니다"
-    print("OK — 왕복 후 원본과 완전히 동일")
+    print("OK, 왕복 후 원본과 완전히 동일")
 
     # Swin Stage 1 실제 크기로도 확인
     big = torch.randn(2, 56, 56, 96)
     wb = window_partition(big, M=7)
     assert tuple(wb.shape) == (2 * 64, 49, 96)
     assert torch.equal(big, window_reverse(wb, M=7, H=56, W=56))
-    print(f"OK — 실제 크기 (2,56,56,96) -> {tuple(wb.shape)} -> 복원 성공")
+    print(f"OK, 실제 크기 (2,56,56,96) -> {tuple(wb.shape)} -> 복원 성공")

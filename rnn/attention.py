@@ -2,9 +2,9 @@
 Bahdanau (additive) attention 구현 연습 (PyTorch nn.Module).
 
 어텐션 = 디코더 상태 s 와 인코더 H(annotations) 로 문맥 c 를 만든다.
-    ① 점수:   e_j = v_a^T tanh(W_a s + U_a h_j)     (원문 단어 j 마다 점수 하나)
-    ② 주목도: α   = softmax(e)                       (원문 위치들에 대해, 합=1)
-    ③ 문맥:   c   = Σ_j α_j h_j                      (annotation 가중합)
+    1) 점수:   e_j = v_a^T tanh(W_a s + U_a h_j)     (원문 단어 j 마다 점수 하나)
+    2) 주목도: α   = softmax(e)                       (원문 위치들에 대해, 합=1)
+    3) 문맥:   c   = Σ_j α_j h_j                      (annotation 가중합)
 
 어텐션에서 weight 가진 건 정렬모델 a 하나뿐:
     W_a (align_dim, dec_dim),  U_a (align_dim, enc_dim),  v_a (align_dim,)

@@ -1,10 +1,10 @@
 """
-SIREN 구현 — Implicit Neural Representations with Periodic Activation Functions
+SIREN 구현, Implicit Neural Representations with Periodic Activation Functions
 (Sitzmann et al., NeurIPS 2020)
 
-  ① SineLayer.init_weights  — 논문 §3.2 + 부록 1.5 의 초기화
-  ② SineLayer.forward       — sin(omega_0 * (Wx + b))
-  ③ SIREN.__init__          — SineLayer 여러 개 + 마지막 Linear 조립
+  1) SineLayer.init_weights    논문 §3.2 + 부록 1.5 의 초기화
+  2) SineLayer.forward         sin(omega_0 * (Wx + b))
+  3) SIREN.__init__            SineLayer 여러 개 + 마지막 Linear 조립
 
 검증: python siren.py
   - check_shapes        : 입출력 shape
@@ -18,7 +18,7 @@ SIREN 구현 — Implicit Neural Representations with Periodic Activation Functi
 
 초기화 (부록 Theorem 1.8):
   W ~ U( -sqrt(6/fan_in),  +sqrt(6/fan_in) )
-  ※ 본문 §3.2 의 "c = 6" 은 오타. 부록이 맞음.
+  본문 §3.2 의 "c = 6" 은 오타. 부록이 맞음.
 
 omega_0 (§3.2 + 부록 1.5):
   첫 층      sin(omega_0 * (Wx+b)) 가 [-1,1] 위에서 여러 주기를 걸치게        → 주파수
@@ -59,7 +59,6 @@ class SineLayer(nn.Module):
             #       math.sqrt(6 / n) / self.omega_0
             #
             pass
-            # ──────────────────────────────────────────────────────────
 
     def forward(self, x):
         """
@@ -69,7 +68,7 @@ class SineLayer(nn.Module):
         식 (4) 의 한 층.  주의: omega_0 는 (Wx + b) 전체에 곱한다.
         """
         # return torch.sin( ... )
-        raise NotImplementedError("② SineLayer.forward")
+        raise NotImplementedError("2) SineLayer.forward")
 
     def pre_activation(self, x, bias=True):
         """
@@ -77,8 +76,8 @@ class SineLayer(nn.Module):
 
         bias=False 면 편향을 뺀 omega_0 * (Wx) 만 준다.
         논문 Theorem 1.8 이 N(0,1) 이라고 말하는 건 이쪽이다.
-        증명 스케치의 괄호 — "(bias does not change distribution for high
-        enough frequency)" — 처럼, 편향은 위상만 밀 뿐 sin 을 통과한 뒤의
+        증명 스케치의 괄호 "(bias does not change distribution for high
+        enough frequency)" 처럼, 편향은 위상만 밀 뿐 sin 을 통과한 뒤의
         분포(arcsine)를 바꾸지 않는다. 대신 sin 직전 값의 sd 는 키운다.
         """
         z = torch.nn.functional.linear(x, self.linear.weight,
@@ -86,7 +85,6 @@ class SineLayer(nn.Module):
         return self.omega_0 * z
 
 #  SIREN 전체
-# ─────────────────────────────────────────────────────────────
 class SIREN(nn.Module):
     def __init__(self, in_features=2, hidden_features=256, hidden_layers=3,
                  out_features=3, first_omega_0=30.0, hidden_omega_0=30.0):
@@ -94,7 +92,7 @@ class SIREN(nn.Module):
         hidden_layers = 은닉 SineLayer 의 개수 (첫 층 제외).
         논문 이미지 fitting 은 5-layer MLP → SineLayer 4개 + 마지막 Linear 1개.
 
-        ⚠ 마지막 층에는 sin 을 걸지 않는다 (출력이 [-1,1] 에 갇히면 안 되므로).
+        마지막 층에는 sin 을 걸지 않는다 (출력이 [-1,1] 에 갇히면 안 되므로).
         """
         super().__init__()
 
@@ -105,7 +103,7 @@ class SIREN(nn.Module):
         #                   hidden_features → hidden_features
         #                   is_first=False, omega_0=hidden_omega_0
         # 3) 마지막 nn.Linear: hidden_features → out_features
-        #    ※ 마지막 Linear 도 초기화를 맞춰주는 게 좋다:
+        #    마지막 Linear 도 초기화를 맞춰주는 게 좋다:
         #       W ~ U( ±sqrt(6/hidden_features)/hidden_omega_0 )
         #
         # layers.append(...) 로 쌓으세요.
@@ -173,7 +171,6 @@ def check_init():
         return _todo("init", e)
 
     print("       층 |  Wx 만 sd  |  +bias sd  |  sin 직후 var")
-    print("     -----+------------+------------+--------------")
     for k, (sdb, sd, var) in enumerate(rows):
         tag = "첫 층" if k == 0 else f"{k+1}층 "
         # 첫 층은 좌표가 그대로 들어오므로(omega_0 배) sd 가 1 이 아닌 게 정상
@@ -184,10 +181,10 @@ def check_init():
     print()
     print("     기대: 2층부터  Wx 만 sd ≈ 1.0 (N(0,1))  그리고  sin 직후 var ≈ 0.5 (arcsine)")
     print("           이 둘이 층이 깊어져도 안 변하는 것 = Theorem 1.8")
-    print("     ※ '+bias' 열은 1 보다 큽니다. nn.Linear 기본 bias 에 omega_0 가 곱해져서인데,")
+    print("     '+bias' 열은 1 보다 큽니다. nn.Linear 기본 bias 에 omega_0 가 곱해져서인데,")
     print("       편향은 위상만 밀 뿐 sin 통과 후 분포는 안 바꿉니다 (그래서 var 는 0.5 유지).")
     print("       논문 Thm 1.8 증명의 괄호 '(bias does not change distribution ...)' 가 이 얘기.")
-    print("     ※ 부록 1.1 은 'standard deviation of 0.5' 라고 썼지만, Lemma 1.3 의")
+    print("     부록 1.1 은 'standard deviation of 0.5' 라고 썼지만, Lemma 1.3 의")
     print("       Var[arcsine(-1,1)] = 1/2 이므로 var 가 0.5, sd 는 0.707 입니다.")
     print("  PASS" if ok else "  FAIL  (초기화 범위를 다시 보세요)")
     return ok

@@ -1,9 +1,9 @@
 """
 Transformer 부품들 (attention 위에 얹는 것):
-  ① PositionalEncoding        위치 정보 (sin/cos)
-  ② PositionwiseFeedForward   토큰별 2층 MLP
-  ③ EncoderLayer              self-attn + FFN (residual + norm)
-  ④ DecoderLayer              masked self-attn + cross-attn + FFN
+  1) PositionalEncoding        위치 정보 (sin/cos)
+  2) PositionwiseFeedForward   토큰별 2층 MLP
+  3) EncoderLayer              self-attn + FFN (residual + norm)
+  4) DecoderLayer              masked self-attn + cross-attn + FFN
 
 검증: python layers.py  → 각 부품 PASS
 """
@@ -14,7 +14,7 @@ import torch.nn.functional as F
 
 from attention import MyMultiHeadAttention
 
-# ① Positional Encoding
+# 1) Positional Encoding
 class PositionalEncoding(nn.Module):
     def __init__(self, d_model, max_len=5000):
         super().__init__()
@@ -33,7 +33,7 @@ class PositionalEncoding(nn.Module):
         # x: (N, L, d_model) → 앞 L개 위치의 PE 를 더함
         return x + self.pe[:x.size(1)].unsqueeze(0)
 
-# ② Position-wise Feed-Forward
+# 2) Position-wise Feed-Forward
 class PositionwiseFeedForward(nn.Module):
     def __init__(self, d_model, d_ff):
         super().__init__()
@@ -43,7 +43,7 @@ class PositionwiseFeedForward(nn.Module):
     def forward(self, x):
         return self.lin2(F.relu(self.lin1(x)))
 
-# ③ Encoder Layer  =  self-attn + FFN  (각각 residual + LayerNorm)
+# 3) Encoder Layer  =  self-attn + FFN  (각각 residual + LayerNorm)
 class EncoderLayer(nn.Module):
     def __init__(self, d_model, num_heads, d_ff):
         super().__init__()
@@ -59,7 +59,7 @@ class EncoderLayer(nn.Module):
 
         return x
 
-# ④ Decoder Layer  =  masked self-attn + cross-attn + FFN
+# 4) Decoder Layer  =  masked self-attn + cross-attn + FFN
 class DecoderLayer(nn.Module):
     def __init__(self, d_model, num_heads, d_ff):
         super().__init__()
@@ -87,7 +87,7 @@ def _check():
     torch.manual_seed(0)
     N, L, d_model, num_heads, d_ff = 2, 5, 8, 2, 32
 
-    # ① PE
+    # 1) PE
     try:
         pe = PositionalEncoding(d_model, max_len=50).double()
         pos = 3
@@ -96,38 +96,38 @@ def _check():
         x = torch.randn(N, L, d_model, dtype=torch.double)
         added = pe(x)
         shape_ok = added.shape == x.shape
-        print(f"① PositionalEncoding  {'PASS' if (ok_sin and ok_cos and shape_ok) else 'FAIL'}")
+        print(f"1) PositionalEncoding  {'PASS' if (ok_sin and ok_cos and shape_ok) else 'FAIL'}")
     except NotImplementedError:
-        print("① PositionalEncoding  미구현")
+        print("1) PositionalEncoding  미구현")
 
-    # ② FFN
+    # 2) FFN
     try:
         ffn = PositionwiseFeedForward(d_model, d_ff).double()
         x = torch.randn(N, L, d_model, dtype=torch.double)
         out = ffn(x)
-        print(f"② FeedForward         {'PASS' if out.shape == x.shape else 'FAIL'}")
+        print(f"2) FeedForward         {'PASS' if out.shape == x.shape else 'FAIL'}")
     except NotImplementedError:
-        print("② FeedForward         미구현")
+        print("2) FeedForward         미구현")
 
-    # ③ EncoderLayer
+    # 3) EncoderLayer
     try:
         enc = EncoderLayer(d_model, num_heads, d_ff).double()
         x = torch.randn(N, L, d_model, dtype=torch.double)
         out = enc(x)
-        print(f"③ EncoderLayer        {'PASS' if out.shape == x.shape else 'FAIL'}")
+        print(f"3) EncoderLayer        {'PASS' if out.shape == x.shape else 'FAIL'}")
     except NotImplementedError:
-        print("③ EncoderLayer        미구현")
+        print("3) EncoderLayer        미구현")
 
-    # ④ DecoderLayer
+    # 4) DecoderLayer
     try:
         dec = DecoderLayer(d_model, num_heads, d_ff).double()
         x = torch.randn(N, L, d_model, dtype=torch.double)
         enc_out = torch.randn(N, 6, d_model, dtype=torch.double)
         causal = torch.triu(torch.full((L, L), float("-inf"), dtype=torch.double), diagonal=1)
         out = dec(x, enc_out, self_mask=causal)
-        print(f"④ DecoderLayer        {'PASS' if out.shape == x.shape else 'FAIL'}")
+        print(f"4) DecoderLayer        {'PASS' if out.shape == x.shape else 'FAIL'}")
     except NotImplementedError:
-        print("④ DecoderLayer        미구현")
+        print("4) DecoderLayer        미구현")
 
 
 if __name__ == "__main__":

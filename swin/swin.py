@@ -3,7 +3,6 @@ Swin Transformer (Swin-T) 구현
 
 논문:  Liu et al., Swin Transformer, ICCV 2021
 이미 완성:  window_ops.py  (window_partition / window_reverse)
-────────────────────────────────────────────────────────────────
 텐서 규약
 
     이 파일에서는 격자 형태 (B, H, W, C) 
@@ -12,9 +11,8 @@ Swin Transformer (Swin-T) 구현
     윈도우로 자른 뒤에는 (B*조개수, M*M, C).
       조 개수 = (H//M) * (W//M),  M*M = 조원 수
 
-    ※ 공식 구현은 (B, L, C) 로 평탄화해서 다니는데, 여기서는 격자 모양을
+    공식 구현은 (B, L, C) 로 평탄화해서 다니는데, 여기서는 격자 모양을
       그대로 유지합니다. window_ops.py 와 맞고 shape 을 눈으로 따라가기 쉬워서
-────────────────────────────────────────────────────────────────
 전체 흐름 (Swin-T, 224×224, C=96)
 
     (B, 3, 224, 224)
@@ -37,7 +35,6 @@ Swin Transformer (Swin-T) 구현
        ▼
     LN -> mean -> Linear(768, 1000) -> logits
 
-────────────────────────────────────────────────────────────────
     1) Mlp            
     2) PatchEmbed
     3) PatchMerging
@@ -50,7 +47,7 @@ import torch.nn as nn
 
 from window_ops import window_partition, window_reverse
 
-# 1) Mlp — 블록 안의 feed-forward 부분
+# 1) Mlp, 블록 안의 feed-forward 부분
 class Mlp(nn.Module):
     """
     Linear -> GELU -> Linear
@@ -75,7 +72,7 @@ class Mlp(nn.Module):
         x = self.fc2(x)
         return x
 
-# 2) PatchEmbed — 이미지를 토큰 격자로
+# 2) PatchEmbed, 이미지를 토큰 격자로
 class PatchEmbed(nn.Module):
     """
         (B, 3, 224, 224)  ->  (B, 56, 56, 96)
@@ -110,7 +107,7 @@ class PatchEmbed(nn.Module):
         x = self.norm(x)
         return x
 
-# 3) PatchMerging — 2×2를 하나로
+# 3) PatchMerging, 2×2를 하나로
 class PatchMerging(nn.Module):
     """
         (B, H, W, C)  ->  (B, H/2, W/2, 2C)
@@ -284,7 +281,7 @@ class WindowAttention(nn.Module):
         x = x.transpose(1,2).reshape(B_, N, C)
         x = self.proj(x)
         return x
-# 5) SwinBlock — 블록 하나
+# 5) SwinBlock, 블록 하나
 class SwinBlock(nn.Module):
     """
         (B, H, W, C)  ->  (B, H, W, C)   격자 크기를 바꾸는 것이 아님
@@ -304,11 +301,11 @@ class SwinBlock(nn.Module):
     shift_size = 0 이면 W-MSA, M//2 이면 SW-MSA 
     블록을 쌓을 때 0, M//2, 0, M//2 ... 로 번갈
 
-    ── SW-MSA 의 추가 절차 
+     SW-MSA 의 추가 절차
         roll(-s, -s)  ->  window_partition  ->  attn(mask)
                       ->  window_reverse    ->  roll(+s, +s)
 
-    ── mask 만들기 
+     mask 만들기
     굴린 격자에서 "반대편 끝에서 굴러온" 애들이 같은 조에 섞입니다.
     그 쌍만 막아야 합니다. 방법:
 
@@ -387,7 +384,7 @@ class SwinBlock(nn.Module):
         x = x + self.mlp(self.norm2(x))
         return x
     
-# 6) SwinTransformer — 전체 조립
+# 6) SwinTransformer, 전체 조립
 class SwinTransformer(nn.Module):
     """
         (B, 3, 224, 224)  ->  (B, num_classes)

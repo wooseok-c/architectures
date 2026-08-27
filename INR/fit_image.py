@@ -1,11 +1,11 @@
 """
-SIREN 실험 — 이미지 한 장을 좌표 함수로 표현하기
+SIREN 실험, 이미지 한 장을 좌표 함수로 표현하기
 
 siren.py 의 TODO 를 다 채운 뒤 돌리세요.
 
-  python fit_image.py --exp relu      # ① Day 1: ReLU MLP 로 실패를 눈으로 보기
-  python fit_image.py --exp compare   # ② ReLU vs SIREN, 논문 Figure 1 재현 (f / ∇f / Δf)
-  python fit_image.py --exp omega     # ③ omega_0 스윕 3 / 30 / 300
+  python fit_image.py --exp relu      # 1) Day 1: ReLU MLP 로 실패를 눈으로 보기
+  python fit_image.py --exp compare   # 2) ReLU vs SIREN, 논문 Figure 1 재현 (f / ∇f / Δf)
+  python fit_image.py --exp omega     # 3) omega_0 스윕 3 / 30 / 300
                                       #    학습은 저해상도, 렌더는 2배 → 픽셀 사이 거동 관찰
 
 결과 png 는 이 폴더에 저장됩니다.
@@ -27,9 +27,7 @@ import torch
 from siren import SIREN, ReLUMLP
 
 
-# ─────────────────────────────────────────────────────────────
 #  데이터
-# ─────────────────────────────────────────────────────────────
 def load_gray(side, path=None):
     """흑백 이미지 (side, side), 값 범위 [-1, 1]."""
     from PIL import Image
@@ -49,7 +47,7 @@ def load_gray(side, path=None):
 
 
 def coord_grid(side, device):
-    """[-1, 1]^2 격자 → (side*side, 2).  ⚠ 좌표 정규화는 SIREN 의 전제."""
+    """[-1, 1]^2 격자 → (side*side, 2). 좌표 정규화는 SIREN 의 전제."""
     t = torch.linspace(-1, 1, side, device=device)
     yy, xx = torch.meshgrid(t, t, indexing="ij")
     return torch.stack([xx.reshape(-1), yy.reshape(-1)], dim=-1)
@@ -63,9 +61,7 @@ def pick_device():
     return torch.device("cpu")
 
 
-# ─────────────────────────────────────────────────────────────
 #  학습 / 평가
-# ─────────────────────────────────────────────────────────────
 def psnr(a, b):
     """a, b 는 [-1,1] 범위. 최대 진폭 2 기준."""
     mse = float(np.mean((a - b) ** 2))
@@ -94,7 +90,7 @@ def render(model, side, device):
 
 
 def derivatives(model, side, device):
-    """∇f 의 크기와 라플라시안 Δf.  ⚠ 이중 역전파라 느립니다."""
+    """∇f 의 크기와 라플라시안 Δf. 이중 역전파라 느립니다."""
     coords = coord_grid(side, device).requires_grad_(True)
     y = model(coords)
     g = torch.autograd.grad(y.sum(), coords, create_graph=True)[0]      # (N, 2)
@@ -118,11 +114,9 @@ def show(ax, a, title, cmap="gray", sym=False):
     ax.axis("off")
 
 
-# ─────────────────────────────────────────────────────────────
 #  실험
-# ─────────────────────────────────────────────────────────────
 def exp_relu(args, dev, img, coords, target):
-    print("\n[① ReLU MLP 로 이미지 맞추기]  — 뭐가 먼저 맞고 뭐가 안 맞는지 보세요")
+    print("\n[1) ReLU MLP 로 이미지 맞추기]  뭐가 먼저 맞고 뭐가 안 맞는지 보세요")
     torch.manual_seed(0)
     m = ReLUMLP(2, 256, 3, 1).to(dev)
     fit(m, coords, target, args.steps, args.lr, tag="relu ")
@@ -137,7 +131,7 @@ def exp_relu(args, dev, img, coords, target):
 
 
 def exp_compare(args, dev, img, coords, target):
-    print("\n[② Figure 1 재현]  — 이미지 값만 지도하고, 도함수는 그냥 계산해서 봅니다")
+    print("\n[2) Figure 1 재현]  이미지 값만 지도하고, 도함수는 그냥 계산해서 봅니다")
     models = {}
     torch.manual_seed(0)
     models["ReLU MLP"] = ReLUMLP(2, 256, 3, 1).to(dev)
@@ -166,14 +160,13 @@ def exp_compare(args, dev, img, coords, target):
 
 
 def exp_omega(args, dev, img, coords, target):
-    print("\n[③ omega_0 스윕]  — loss 와 화질이 어긋나는 행이 있는지")
+    print("\n[3) omega_0 스윕]  loss 와 화질이 어긋나는 행이 있는지")
     up = args.side * 2
     fig, axes = plt.subplots(2, len(args.omegas), figsize=(3.0 * len(args.omegas), 6.2))
     if len(args.omegas) == 1:
         axes = axes.reshape(2, 1)
 
     print(f"\n    {'w0':>6} | {'train loss':>11} | {'PSNR(학습해상도)':>16}")
-    print("    " + "-" * 42)
     for j, w0 in enumerate(args.omegas):
         torch.manual_seed(0)
         m = SIREN(2, 256, 3, 1, first_omega_0=w0, hidden_omega_0=w0).to(dev)
